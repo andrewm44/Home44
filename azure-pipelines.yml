@@ -1,0 +1,95 @@
+# Name of the pipeline
+name: 'Blazor App CI/CD Pipeline'
+
+# Trigger on push or PR to the main branch
+trigger:
+  branches:
+    include:
+      - main
+
+# Pipeline variables (optional)
+variables:
+  buildConfiguration: 'Release'
+  azureSubscription: '<Your-Service-Connection-Name>'  # Replace with your Azure Service Connection name
+  appServiceName: '<Your-App-Service-Name>'  # Replace with your App Service name
+  resourceGroupName: '<Your-Resource-Group>'  # Replace with your Resource Group name
+  dotnetVersion: '6.x'  # Set your .NET version (e.g., 6.x, 7.x)
+
+# Define pipeline stages
+stages:
+
+  # Build stage
+  - stage: Build
+    displayName: 'Build Blazor App'
+    jobs:
+      - job: Build
+        displayName: 'Build Job'
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          # Checkout the code
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+              installationPath: $(Agent.ToolsDirectory)/dotnet
+
+          - checkout: self
+
+          # Restore NuGet packages
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore NuGet Packages'
+            inputs:
+              command: 'restore'
+              projects: '**/*.csproj'
+
+          # Build the Blazor app
+          - task: DotNetCoreCLI@2
+            displayName: 'Build Blazor Application'
+            inputs:
+              command: 'build'
+              projects: '**/*.csproj'
+              arguments: '--configuration $(buildConfiguration)'
+
+          # Publish the Blazor app
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish Blazor Application'
+            inputs:
+              command: 'publish'
+              projects: '**/*.csproj'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+
+          # Publish the artifacts
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifacts'
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)'
+              artifactName: 'drop'
+
+  # Deploy stage
+  - stage: Deploy
+    displayName: 'Deploy to Azure App Service'
+    dependsOn: Build
+    jobs:
+      - job: Deploy
+        displayName: 'Deploy Job'
+        pool:
+          vmImage: 'windows-latest'
+        steps:
+          # Download build artifacts
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          # Deploy to Azure App Service
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appType: 'webApp'
+              appName: '$(appServiceName)'
+              package: '$(System.ArtifactsDirectory)/drop'
+              resourceGroupName: '$(resourceGroupName)'
+              slotName: 'Production'  # You can set this to a deployment slot if you're using one
