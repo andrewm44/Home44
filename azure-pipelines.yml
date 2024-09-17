@@ -5,15 +5,15 @@ name: 'Blazor App CI/CD Pipeline'
 trigger:
   branches:
     include:
-      - main
+      - master
 
 # Pipeline variables (optional)
 variables:
   buildConfiguration: 'Release'
-  azureSubscription: '<Your-Service-Connection-Name>'  # Replace with your Azure Service Connection name
-  appServiceName: '<Your-App-Service-Name>'  # Replace with your App Service name
-  resourceGroupName: '<Your-Resource-Group>'  # Replace with your Resource Group name
-  dotnetVersion: '6.x'  # Set your .NET version (e.g., 6.x, 7.x)
+  azureSubscription: 'Pay-As-You-Go'  # Replace with your Azure Service Connection name
+  appServiceName: 'home44'  # Replace with your App Service name
+  resourceGroupName: 'home44resources'  # Replace with your Resource Group name
+  dotnetVersion: '8.x'  # Set your .NET version (e.g., 6.x, 7.x)
 
 # Define pipeline stages
 stages:
