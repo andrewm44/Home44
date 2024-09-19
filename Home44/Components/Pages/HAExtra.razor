@@ -6,6 +6,8 @@
 
 Raspberry Pi 2
 
+192.168.1.125
+ssh dad@192.168.1.125 / mp....ss
 
 main site:
 http://192.168.1.125:8085/
@@ -22,3 +24,26 @@ TODOs -
     <li>..</li>
 </ul>
 
+
+Blazor application:
+
+is run by service - /etc/systemd/system/homethings-dotnet.service
+
+<p>
+    [Unit]
+    Description=.NET Core Web Application running on Kestrel
+    After=network.target
+
+    [Service]
+    WorkingDirectory=/usr/local/myapps/HaMoreThings
+    ExecStart=/usr/local/bin/dotnet /usr/local/myapps/HaMoreThings/HomeThings.dll --urls=http://0.0.0.0:8085
+    Restart=always
+    # Restart service after 10 seconds if the dotnet service crashes:
+    RestartSec=10
+    SyslogIdentifier=dotnet-homethings
+    #User=www-data
+    Environment=ASPNETCORE_ENVIRONMENT=Development
+
+    [Install]
+    WantedBy=multi-user.target
+</p>
